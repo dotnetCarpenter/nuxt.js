@@ -1,7 +1,8 @@
 module.exports = {
   loading: true,
   modules: [
-    '~modules/basic',
+    '~/modules/basic',
+    '~/modules/hooks',
     {
       src: '~/modules/middleware',
       options: {
