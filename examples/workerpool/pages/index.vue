@@ -66,7 +66,7 @@ export default {
     }
   },
   mounted () {
-    // this.pool = this.$worker.createWorker('pool')
+    this.pool = this.$worker.createWorker('pool')
   },
   methods: {
     async test () {
@@ -110,7 +110,7 @@ export default {
     createWorkers () {
       if (process.browser) {
         for(let i = 0, len = navigator.hardwareConcurrency || 1; i < len; i++) {
-          this.workers.push(this.$worker.createWorker('example'))
+          this.pool.addWorker()
         }
 
         this.notification = 'Go nuts!'
