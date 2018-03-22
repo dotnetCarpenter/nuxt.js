@@ -56,13 +56,17 @@ export default {
       workers: [],
       workerIndex: 0,
       longRunningWorkers: [],
-      longIndex: 0
+      longIndex: 0,
+      pool: null
     }
   },
   watch: {
     workers (workers) {
       if (workers.length === 0) this.notification = 'Zero free Web Workers - click "Create more Workers"'
     }
+  },
+  mounted () {
+    this.pool = this.$worker.createWorker('pool')
   },
   methods: {
     test () {
@@ -83,6 +87,7 @@ export default {
       if (worker) {
         worker.onmessage = (event) => {
           this.notification = `expensive made ${event.data} loops`
+          this.workers.push(...this.longRunningWorkers.splice(this.longRunningWorkers.indexOf(worker), 1))
         }
         this.longRunningWorkers.push(worker)
       } else {
@@ -96,7 +101,7 @@ export default {
       const worker = this.longRunningWorkers.pop()
       worker.onmessage = null
       worker.terminate()
-      this.workers.push(this.$worker.createWorker())
+      this.workers.push(this.$worker.createWorker('example'))
       this.notification = 'Worker freed'
     },
     removeWorker () {
@@ -112,7 +117,7 @@ export default {
     createWorkers () {
       if (process.browser) {
         for(let i = 0, len = navigator.hardwareConcurrency || 1; i < len; i++) {
-          this.workers.push(this.$worker.createWorker())
+          this.workers.push(this.$worker.createWorker('example'))
         }
 
         this.notification = 'Go nuts!'
