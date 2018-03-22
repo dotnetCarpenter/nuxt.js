@@ -66,40 +66,34 @@ export default {
     }
   },
   mounted () {
-    this.pool = this.$worker.createWorker('pool')
+    // this.pool = this.$worker.createWorker('pool')
   },
   methods: {
-    test () {
+    async test () {
       const worker = this.workers[this.workerIndex++ % this.workers.length]
 
       if (worker) {
-        worker.onmessage = (event) => {
-          this.notification = event.data.hello
-        }
+        const hello = await worker.hello({ hello: 'world' })
+        this.notification = hello
       }
-
-      if (worker) worker.postMessage({ hello: 'world' })
       else this.notification = 'No more test workers available'
     },
-    long (miliseconds) {
+    async long (miliseconds) {
       let worker = this.workers.shift()
 
       if (worker) {
-        worker.onmessage = (event) => {
-          this.notification = `expensive made ${event.data} loops`
-          this.workers.push(...this.longRunningWorkers.splice(this.longRunningWorkers.indexOf(worker), 1))
-        }
         this.longRunningWorkers.push(worker)
       } else {
-        worker = this.longRunningWorkers[ this.longIndex++ % this.longRunningWorkers.length]
+        worker = this.longRunningWorkers[ this.longIndex++ % this.longRunningWorkers.length ]
       }
 
-      worker.postMessage({ action: 'expensive', time: miliseconds })
+      const iterations = await worker.expensive(miliseconds)
+      this.notification = `expensive made ${iterations} loops`
+      this.workers.push(...this.longRunningWorkers.splice(this.longRunningWorkers.indexOf(worker), 1))
     },
     freeWorker () {
       // we can't really free a worker, we can only terminate it and create a new
       const worker = this.longRunningWorkers.pop()
-      worker.onmessage = null
       worker.terminate()
       this.workers.push(this.$worker.createWorker('example'))
       this.notification = 'Worker freed'
@@ -111,7 +105,6 @@ export default {
 
       if (this.longRunningWorkers.indexOf(worker) > -1) this.longRunningWorkers.splice(this.longRunningWorkers.indexOf(worker), 1)
 
-      worker.onmessage = null
       worker.terminate()
     },
     createWorkers () {
